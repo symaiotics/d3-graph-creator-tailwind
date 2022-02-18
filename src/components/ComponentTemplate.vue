@@ -8,16 +8,16 @@
         </h1>
       </div>
       <div class="col">
-        <span @click="addNode()" class="glyphicon glyphicon-plus graphMenuIcon"></span>
-        <span @click="deleteSelectedNode()" class="graphMenuIcon glyphicon glyphicon-minus"></span>
-        <span @click="toggleFixed()" class="graphMenuIcon glyphicon glyphicon-pushpin"></span>
-        <span @click="addLink()" class="graphMenuIcon glyphicon glyphicon-link"></span>
-        <span @click="downloadSvg(parentId)" class="graphMenuIcon glyphicon glyphicon-picture"></span>
-        <span @click="downloadJson(dataset)" class="graphMenuIcon glyphicon glyphicon-download"></span>
+        <span @click="addNode()" class="glyphicon glyphicon-plus d3GraphCreatorMenuIcon"></span>
+        <span @click="deleteSelectedNode()" class="d3GraphCreatorMenuIcon glyphicon glyphicon-minus"></span>
+        <span @click="toggleFixed()" class="d3GraphCreatorMenuIcon glyphicon glyphicon-pushpin"></span>
+        <span @click="addLink()" class="d3GraphCreatorMenuIcon glyphicon glyphicon-link"></span>
+        <span @click="downloadSvg(parentId)" class="d3GraphCreatorMenuIcon glyphicon glyphicon-picture"></span>
+        <span @click="downloadJson(dataset)" class="d3GraphCreatorMenuIcon glyphicon glyphicon-download"></span>
       </div>
     </div>
   </div>
-  <div :id="parentId" class="svgParent"></div>
+  <div :id="parentId" class="d3GraphCreatorSvgParent"></div>
 
   <table class=" gc-table table">
     <thead>
@@ -112,8 +112,9 @@ onMounted(() => {
 function initialize() {
   var parentDiv = document.getElementById(parentId.value);
   width = parentDiv.clientWidth;
+  if(!width) width = 500;
   height = parentDiv.clientHeight;
-
+  if(!height) height = 500;
   svg = d3.select(parentDiv).append("svg");
   svg.attr("width", width)
     .attr("height", height)
@@ -224,6 +225,10 @@ function initialize() {
 }
 
 function initSimulation() {
+
+  console.log("width", width);
+  console.log("height", height);
+  
   simulation
     .force('link', d3.forceLink())
     .force('charge', d3.forceManyBody())
@@ -531,11 +536,13 @@ function downloadJson(payload) {
 }
 
 function downloadSvg(id) {
+  //Set the bounds for the Export
   var bounds = svg.node().getBBox();
   svg.attr("viewBox", `${bounds.x - 5} ${bounds.y - 5} ${bounds.width + 10} ${bounds.height + 10}`)
   svg.attr("width", bounds.width + 10)
     .attr("height", bounds.height + 10)
 
+  //Export out the SVG
   var svgData = document.getElementById(id).children[0].outerHTML;
   var svgBlob = new Blob(['<?xml version="1.0" encoding="UTF-8" standalone="no"?>', svgData], { type: "image/svg+xml;charset=utf-8" });
   var svgUrl = URL.createObjectURL(svgBlob);
@@ -545,6 +552,8 @@ function downloadSvg(id) {
   document.body.appendChild(downloadLink);
   downloadLink.click();
   document.body.removeChild(downloadLink);
+
+  //Reset the bounds after export
   svg.attr("width", width)
     .attr("height", height)
 
@@ -553,9 +562,10 @@ function downloadSvg(id) {
 
 </script>
  
-
+<!-- Important to ensure your styles are scoped for your components to not interfere with global styling -->
 <style scoped>
-.svgParent {
+.d3GraphCreatorSvgParent {
+  height: 500px;
   min-height: 500px;
   border-radius: 5px;
   border-width: 3px;
@@ -563,11 +573,10 @@ function downloadSvg(id) {
   border-style: solid;
 }
 
-.graphMenu {
+.d3GraphCreatorMenu {
   height: 40px;
 }
-.graphMenuIcon {
-  
+.d3GraphCreatorMenuIcon {
   font-size: 1.5em;
   padding: 5px;
   height: 20px;
@@ -575,7 +584,7 @@ function downloadSvg(id) {
   margin-bottom: auto;
 }
 
-.graphMenuIcon:hover {
+.d3GraphCreatorMenuIcon:hover {
   opacity: .8;
 }
 </style> 
