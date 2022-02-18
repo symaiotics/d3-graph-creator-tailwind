@@ -9,7 +9,7 @@ Install this into your Vue 3 project.
 And then register the component within your page or component in Vue.
 It is important to bring in the style.css for this component as well.
 
-`
+```
 <script setup>
 //Import the component and the style sheet used by that component to get its custom styling
 import D3GC from '@symaiotics/d3-graph-creator-gcweb'
@@ -19,7 +19,7 @@ import '@symaiotics/d3-graph-creator-gcweb/dist/style.css';
 <template>
   <D3GC title="Main Title" />
 </template>
-`
+```
 
 ## D3.js
 This library uses the latest version of D3 and implements a variety of add, delete, link, pin and export tools to make graph creation fast and easy.
