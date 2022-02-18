@@ -1,0 +1,36 @@
+{
+  "name": "@symaiotics/d3-graph-creator-gcweb",
+  "version": "0.0.1",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/my-lib.umd.js",
+  "module": "./dist/my-lib.es.js",
+  "exports": {
+    ".": {
+      "import": "./dist/my-lib.es.js",
+      "require": "./dist/my-lib.umd.js"
+    }
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview"
+  },
+  "dependencies": {
+    "d3": "^7.3.0",
+    "sass": "^1.49.8",
+    "uuid": "^8.3.2",
+    "vue": "^3.2.29"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^1.9.3",
+    "vite": "^2.6.4"
+  },
+  "description": "A network graph builder using the powerful D3.js library, applying the GCWeb theme.",
+  "author": "Symaiotics Corporation",
+  "license": "ISC",
+  "publishConfig": {
+    "access": "public"
+  }
+}
