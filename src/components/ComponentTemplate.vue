@@ -274,7 +274,7 @@ function loadLinks() {
     .attr('id', (d, i) => parentId.value + 'textarc' + i)
     .attr("fill", "none")
     .attr("class", 'link')
-    .attr("stroke", "#aaa") 
+    .attr("stroke", "#aaa")
     .attr("stroke-width", 3)
     .attr("marker-end", "url(#end)");
 
@@ -289,9 +289,10 @@ function loadLinks() {
     .selectAll('.linkType')
     .data(dataset.links, (d) => d.id)
 
-  var linkEnter = linkType.enter().append("text")
+  var linkEnter = linkType.enter()
+    .append("text")
     .attr("class", 'linkType')
-    .attr("fill", "#77a")
+    .attr("white-space", "pre")
     .attr("font-size", ".8em")
     .attr("font-weight", "600")
     .attr('dy', "-10px")
@@ -300,10 +301,16 @@ function loadLinks() {
     .attr('startOffset', '60%')
     .style("text-anchor", "middle")
     .text(function (d) {
-      // var dSelected = false;
       if (d.source.selected || d.target.selected) return d?.type?.en ? d.type.en + " \u003E" : "[ ]";
-      else return "\u00A0";
+      else return "-";
     })
+    .attr("fill", //make fill invisible if not selected
+      function (d) {
+        return (d?.type?.en && (d.source.selected || d.target.selected))  ? "#77a" : "none";
+      }
+
+    )
+
 
   linkType = linkEnter.merge(linkType);
 
@@ -364,9 +371,7 @@ function loadNodes() {
           .attr("fill", "#333")
           // .style("filter", "url(#glow)");
           ;
-
-
-
+          
         return nodes;
       },
     );
@@ -402,11 +407,6 @@ function drag(simulation) {
     .on("end", dragended);
 }
 
-
-
-
-
-
 function restartSimulation() {
   simulation.nodes(dataset.nodes);
   simulation.force('link').links(dataset.links);
@@ -424,6 +424,7 @@ function ticked() {
   //     return "M" + d.source.x + "," + d.source.y + "A" + dr + "," + dr + " 0 0,1 " + d.target.x + "," + d.target.y;
   //   });
   // console.log(link)
+
   link.attr("d", drawCurve2);
   node.attr('transform', (d) => `translate(${d.x},${d.y})`);
 }
@@ -442,6 +443,7 @@ function addNode(node) {
   if (!node.vy) node.vy = 0;
   dataset.nodes.push(node);
   selectNode(node);
+  loadLinks();
   loadNodes();
   restartSimulation();
 }
@@ -478,10 +480,9 @@ function addLink() {
       link.instanceId = uuidv4();
       link.name = { "en": "New Link", "fr": "Nouveau lien" };
       link.descripion = { "en": "New Link Description", "fr": "Description du nouveau lien" }
-      link.source = selectedNodes.value[0].id;
-      link.target = selectedNodes.value[a].id;
-      link.valence = {};
-      console.log(link)
+      link.source = selectedNodes.value[0];
+      link.target = selectedNodes.value[a];
+      link.type = { "en": "Associate of", "fr": "Associé de"};
       dataset.links.push(link);
     }
     loadLinks();
@@ -491,15 +492,14 @@ function addLink() {
 
 function selectNode(node) {
   currentNode.value = node;
-
   var matchNode = selectedNodes.value.findIndex((n) => { return n.id == node.id })
   if (matchNode == -1) {
     node.selected = true;
     node.selectedIndex = selectedNodes.value.length;
     node.fixed = true;
     selectedNodes.value.push(node);
-    loadNodes();
     loadLinks();
+    loadNodes();
     restartSimulation();
   }
 }
