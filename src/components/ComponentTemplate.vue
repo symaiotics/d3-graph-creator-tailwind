@@ -9,17 +9,26 @@
       </div>
       <div class="col">
         <span @click="addNode()" class="glyphicon glyphicon-plus d3GraphCreatorMenuIcon"></span>
-        <span @click="deleteSelectedNode()" class="d3GraphCreatorMenuIcon glyphicon glyphicon-minus"></span>
+        <span
+          @click="deleteSelectedNode()"
+          class="d3GraphCreatorMenuIcon glyphicon glyphicon-minus"
+        ></span>
         <span @click="toggleFixed()" class="d3GraphCreatorMenuIcon glyphicon glyphicon-pushpin"></span>
         <span @click="addLink()" class="d3GraphCreatorMenuIcon glyphicon glyphicon-link"></span>
-        <span @click="downloadSvg(parentId)" class="d3GraphCreatorMenuIcon glyphicon glyphicon-picture"></span>
-        <span @click="downloadJson(dataset)" class="d3GraphCreatorMenuIcon glyphicon glyphicon-download"></span>
+        <span
+          @click="downloadSvg(parentId)"
+          class="d3GraphCreatorMenuIcon glyphicon glyphicon-picture"
+        ></span>
+        <span
+          @click="downloadJson(dataset)"
+          class="d3GraphCreatorMenuIcon glyphicon glyphicon-download"
+        ></span>
       </div>
     </div>
   </div>
   <div :id="parentId" class="d3GraphCreatorSvgParent"></div>
 
-  <table class=" gc-table table">
+  <table class="gc-table table">
     <thead>
       <tr>
         <th>Index</th>
@@ -77,12 +86,12 @@ const props = defineProps({
   },
   linksSource: {
     type: Array, default: [
-      { "source": "jean-michel", "target": "alexandra", "value": 1 },
-      { "source": "jean-michel", "target": "hans", "value": 1 },
-      { "source": "jean-michel", "target": "olafur", "value": 1 },
-      { "source": "jean-michel", "target": "john", "value": 1 },
-      { "source": "olafur", "target": "hans", "value": 1 },
-      { "source": "hans", "target": "olafur", "value": 1 }
+      { "source": "jean-michel", "target": "alexandra", "value": 1, "type": { "en": "Brother of", "fr": "Frère de" } },
+      { "source": "jean-michel", "target": "hans", "value": 1, "type": { "en": "Brother Of", "fr": "Frère de" } },
+      { "source": "jean-michel", "target": "olafur", "value": 1, "type": { "en": "Employer Of", "fr": "Employeur de" } },
+      { "source": "jean-michel", "target": "john", "value": 1, "type": { "en": "Employer Of", "fr": "Employeur de" } },
+      { "source": "olafur", "target": "hans", "value": 1, "type": { "en": "Associate Of", "fr": "Associé de" } },
+      { "source": "hans", "target": "olafur", "value": 1, "type": { "en": "Associate Of", "fr": "Associé de" } }
     ]
   }
 })
@@ -112,15 +121,16 @@ onMounted(() => {
 function initialize() {
   var parentDiv = document.getElementById(parentId.value);
   width = parentDiv.clientWidth;
-  if(!width) width = 500;
+  if (!width) width = 500;
   height = parentDiv.clientHeight;
-  if(!height) height = 500;
+  if (!height) height = 500;
   svg = d3.select(parentDiv).append("svg");
   svg.attr("width", width)
     .attr("height", height)
     .attr("style", "min-height:500px;font-family:sans-serif")
     .attr("xmlns", "http://www.w3.org/2000/svg")
-    .attr("xmlns:svg", "http://www.w3.org/2000/svg");
+    .attr("xmlns:svg", "http://www.w3.org/2000/svg")
+    .attr("xmlns:xlink", "http://www.w3.org/1999/xlink");
 
   //Establish the container to permit zoom and pan
   container = svg.append("g");
@@ -129,7 +139,8 @@ function initialize() {
     e.preventDefault();
     var nodesFilter = dataset.nodes.filter((node) => { return node.selected })
     nodesFilter.forEach((n, index) => { n.selected = false })
-    selectedNodes.value.splice(0, selectedNodes.value.length)
+    selectedNodes.value.splice(0, selectedNodes.value.length);
+    loadLinks();
     loadNodes();
     restartSimulation();
   });
@@ -228,7 +239,7 @@ function initSimulation() {
 
   console.log("width", width);
   console.log("height", height);
-  
+
   simulation
     .force('link', d3.forceLink())
     .force('charge', d3.forceManyBody())
@@ -251,18 +262,50 @@ function initSimulation() {
 
 function loadLinks() {
 
-  link = container.select('.links')
-    .selectAll('path').remove();
+  //Handle the Links
+  container.select('.links')
+    .selectAll('.link').remove();
 
   link = container.select('.links')
-    .selectAll("path")
+    .selectAll('.link')
     .data(dataset.links, (d) => d.id)
-    .enter()
-    .append("path")
-    .attr('fill', 'none')
+
+  var linkEnter = link.enter().append("path")
+    .attr('id', (d, i) => parentId.value + 'textarc' + i)
+    .attr("fill", "none")
+    .attr("class", 'link')
+    .attr("stroke", "#aaa") 
     .attr("stroke-width", 3)
-    .attr("stroke", "#aaa")
-    .attr('marker-end', 'url(#end)');
+    .attr("marker-end", "url(#end)");
+
+  link = linkEnter.merge(link);
+
+
+  //Handle the linkTypes
+  container.select('.links')
+    .selectAll('.linkType').remove();
+
+  var linkType = container.select('.links')
+    .selectAll('.linkType')
+    .data(dataset.links, (d) => d.id)
+
+  var linkEnter = linkType.enter().append("text")
+    .attr("class", 'linkType')
+    .attr("fill", "#77a")
+    .attr("font-size", ".8em")
+    .attr("font-weight", "600")
+    .attr('dy', "-10px")
+    .append("textPath")
+    .attr("xlink:href", (d, i) => '#' + parentId.value + 'textarc' + i)
+    .attr('startOffset', '60%')
+    .style("text-anchor", "middle")
+    .text(function (d) {
+      // var dSelected = false;
+      if (d.source.selected || d.target.selected) return d?.type?.en ? d.type.en + " \u003E" : "[ ]";
+      else return "\u00A0";
+    })
+
+  linkType = linkEnter.merge(linkType);
 
   emit('links', dataset.links)
 }
@@ -380,7 +423,7 @@ function ticked() {
   //       dr = Math.sqrt(dx * dx + dy * dy);
   //     return "M" + d.source.x + "," + d.source.y + "A" + dr + "," + dr + " 0 0,1 " + d.target.x + "," + d.target.y;
   //   });
-
+  // console.log(link)
   link.attr("d", drawCurve2);
   node.attr('transform', (d) => `translate(${d.x},${d.y})`);
 }
@@ -456,6 +499,7 @@ function selectNode(node) {
     node.fixed = true;
     selectedNodes.value.push(node);
     loadNodes();
+    loadLinks();
     restartSimulation();
   }
 }
@@ -488,6 +532,7 @@ function deselectNode(node) {
   node.selected = false;
   var matchNode = selectedNodes.value.findIndex((n) => { return n.id == node.id })
   if (matchNode > -1) selectedNodes.value.splice(matchNode, 1)
+  loadLinks();
   loadNodes();
   restartSimulation();
 }
@@ -538,6 +583,7 @@ function downloadJson(payload) {
 function downloadSvg(id) {
   //Set the bounds for the Export
   var bounds = svg.node().getBBox();
+  console.log(bounds)
   svg.attr("viewBox", `${bounds.x - 5} ${bounds.y - 5} ${bounds.width + 10} ${bounds.height + 10}`)
   svg.attr("width", bounds.width + 10)
     .attr("height", bounds.height + 10)
@@ -585,6 +631,6 @@ function downloadSvg(id) {
 }
 
 .d3GraphCreatorMenuIcon:hover {
-  opacity: .8;
+  opacity: 0.8;
 }
 </style> 

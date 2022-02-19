@@ -21,6 +21,29 @@ import '@symaiotics/d3-graph-creator-gcweb/dist/style.css';
 </template>
 ```
 
+## Node and Link Models
+These objects are being expanded as the library advances. 
+
+Node object
+```{ 
+  "id": "jean-michel", 
+  "name": { "en": "Jean-Michel", "fr": "" }, 
+  "group": 1, 
+  "radius": 30 
+  }```
+
+To be added: type, border, shape...
+
+Link object
+```{ 
+  "source": "jean-michel", 
+  "target": "alexandra", 
+  "value": 1, 
+  "type": { "en": "Brother of", "fr": "Frère de" 
+  }```
+
+To be added: width, colour, style...
+
 ## D3.js
 This library uses the latest version of D3 and implements a variety of add, delete, link, pin and export tools to make graph creation fast and easy.
 
