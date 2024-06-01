@@ -1,58 +1,58 @@
 <template>
-  <div class="container">
-    <div class="row">
-      <div class="col">
-        <h1>
-          {{ title }}
-          <small>{{ description }}</small>
-        </h1>
-      </div>
-      <div class="col">
-        <span @click="addNode()" class="glyphicon glyphicon-plus d3GraphCreatorMenuIcon"></span>
-        <span
-          @click="deleteSelectedNode()"
-          class="d3GraphCreatorMenuIcon glyphicon glyphicon-minus"
-        ></span>
-        <span @click="toggleFixed()" class="d3GraphCreatorMenuIcon glyphicon glyphicon-pushpin"></span>
-        <span @click="addLink()" class="d3GraphCreatorMenuIcon glyphicon glyphicon-link"></span>
-        <span
-          @click="downloadSvg(parentId)"
-          class="d3GraphCreatorMenuIcon glyphicon glyphicon-picture"
-        ></span>
-        <span
-          @click="downloadJson(dataset)"
-          class="d3GraphCreatorMenuIcon glyphicon glyphicon-download"
-        ></span>
-      </div>
-    </div>
-  </div>
-  <div :id="parentId" class="d3GraphCreatorSvgParent"></div>
+  <div class="container mx-auto px-4">
 
-  <table class="gc-table table">
-    <thead>
-      <tr>
-        <th>Index</th>
-        <th>Name</th>
-        <th>Radius</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr v-for="(node, index) in selectedNodes" :key="'selectedNode' + index">
-        <td>{{ index }}</td>
-        <td>
-          <input class="form-control" @change="updateNode(node)" v-model="node.name.en" type="text" />
-        </td>
-        <td>
-          <input
-            class="form-control"
-            @change="updateNode(node)"
-            v-model="node.radius"
-            type="number"
-          />
-        </td>
-      </tr>
-    </tbody>
-  </table>
+    <p v-if="props?.title?.length" class="text-3xl text-gray-700 font-bold" :class="{ 'text-gray-300': props.darkMode }">
+      {{ props.title }}
+    </p>
+    <p v-if="props?.description?.length" class="text-gray-500 text-lg mb-2" :class="{ 'text-white': props.darkMode }">
+      {{ props.description }}
+    </p>
+
+    <div v-if="props?.showControls">
+      <button class="btn btn-blue" @click="addNode()">Add</button>
+      <button class="btn btn-blue" @click="deleteSelectedNode()">Delete</button>
+      <button class="btn btn-blue" @click="pinAll()">Pin All</button>
+      <button class="btn btn-blue" @click="toggleFixed()">Unpin</button>
+      <button class="btn btn-blue" @click="addLink()">Link</button>
+      <button class="btn btn-blue" @click="downloadSvg(parentId)">Download SVG</button>
+      <button class="btn btn-blue" @click="downloadJson(dataset)">Download JSON</button>
+    </div>
+    <div :id="parentId" class="d3GraphCreatorSvgParent" :class="{ 'bg-slate-800': props.darkMode }"></div>
+
+    <table v-if="props?.showTable" class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+      <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+        <tr>
+          <th scope="col" class="px-6 py-3">
+            Index
+          </th>
+          <th scope="col" class="px-6 py-3">
+            Name
+          </th>
+          <th scope="col" class="px-6 py-3">
+            Radius
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <template v-for="(node, index) in selectedNodes" :key="'selectedNode' + index">
+          <tr class="bg-gray-200 border-b dark:bg-gray-900 dark:border-gray-700" :class="{ 'bg-white': index % 2 == 0 }">
+            <td class="px-6 py-4">{{ index }}</td>
+            <td class="px-6 py-4">
+              <input class="inputField" @change="updateNode(node)" @v-on:keyup.enter="updateNode(node)"
+                v-model="node.name.en" type="text" />
+            </td>
+            <td class="px-6 py-4">
+              <!-- <input @input="updateNode(node)" type="range" min="10" max="100"
+                class="w-full h-2 bg-gray-400 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                v-model="node.radius"/> -->
+                <!-- Alternate input box-->
+                <input class="inputField" @change="updateNode(node)" @v-on:keyup.enter="updateNode(node)" v-model="node.radius" type="number" />
+            </td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+  </div>
 </template>
 
 <script setup>
@@ -65,19 +65,29 @@ let emit = defineEmits([
   'nodes', //active nodes 
   'links', //active links
   'addNodes', //array of added nodes
+  'addLinks', //array of added nodes
   'deleteNodes', //array of deleted nodes
-  'selectNodes',  //array of selected nodes
+  
+  'selectNodes',  //array of last selected nodes
+  'selectedNodes',  //array of all selected nodes
   'deselectNodes', //array of deselected nodes
-  'updatedNodes', //array of nodes updated, just a subset
+  'updateNodes', //array of nodes updated, just a subset
 ])
 
 //These props allow us to customize the 
 const props = defineProps({
   title: { type: String, default: "D3 Graph Creator" },
-  description: String,
+  description: { type: String, default: "An interactive graph interface." },
+
+  glow: { type: Boolean, default: false },
+  darkMode: { type: Boolean, default: false },
+  showControls: { type: Boolean, default: true },
+  showTable: { type: Boolean, default: true },
+  useGravity: { type: Boolean, default: true },
+
   nodesSource: {
     type: Array, default: [
-      { "id": "jean-michel", "name": { "en": "Jean-Michel", "fr": "" }, "group": 1, "radius": 30 },
+      { "id": "jean-michel", "name": { "en": "Jean-Michel", "fr": "" }, "group": 1, "radius": 30 , fx:500, fy:250, selected:true, selectedIndex:0},
       { "id": "alexandra", "name": { "en": "Alexandra", "fr": "" }, "group": 1, "radius": 30 },
       { "id": "hans", "name": { "en": "Hans", "fr": "" }, "group": 1, "radius": 20 },
       { "id": "olafur", "name": { "en": "Ólafur", "fr": "" }, "group": 1, "radius": 15 },
@@ -135,6 +145,7 @@ function initialize() {
   //Establish the container to permit zoom and pan
   container = svg.append("g");
 
+  //Right click
   svg.on("contextmenu", (e, d) => {
     e.preventDefault();
     var nodesFilter = dataset.nodes.filter((node) => { return node.selected })
@@ -164,16 +175,16 @@ function initialize() {
     .attr("orient", "auto")
     .append("svg:path")
     .attr("d", "M0,-2.0L5,0L0,2.0")
-    .attr("stroke", "#777")
+    .attr("stroke", () => { return props.darkMode ? '#ccc' : "#555" })
     .attr("stroke-width", .5)
-    .attr("fill", "#666")
+    .attr("fill", () => { return props.darkMode ? '#ddd' : "#444" })
     ;         // .attr('transform', 'rotate(-10)')
 
-  //Filter for the outside glow
+  //Filter for the outside glow for the container
   var filter = defs.append("filter")
     .attr("id", "glow");
   filter.append("feGaussianBlur")
-    .attr("stdDeviation", "2")
+    .attr("stdDeviation", "5")
     .attr("result", "coloredBlur");
   var feMerge = filter.append("feMerge");
   feMerge.append("feMergeNode")
@@ -181,35 +192,35 @@ function initialize() {
   feMerge.append("feMergeNode")
     .attr("in", "SourceGraphic");
 
-  var gooey = defs.append("filter")
-    //use a unique id to reference again later on
-    .attr("id", "gooeyCodeFilter");
+  // var gooey = defs.append("filter")
+  //   //use a unique id to reference again later on
+  //   .attr("id", "gooeyCodeFilter");
 
-  //Append multiple "pieces" to the filter
-  gooey.append("feGaussianBlur")
-    .attr("in", "SourceGraphic")
-    .attr("stdDeviation", "20")
-    .attr("color-interpolation-filters", "sRGB")
-    .attr("result", "blur");
-  gooey.append("feColorMatrix")
-    //the class used later to transition the gooey effect
-    .attr("class", "blurValues")
-    .attr("in", "blur")
-    .attr("mode", "matrix")
-    .attr("values", "1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9")
-    .attr("result", "gooey");
+  // //Append multiple "pieces" to the filter
+  // gooey.append("feGaussianBlur")
+  //   .attr("in", "SourceGraphic")
+  //   .attr("stdDeviation", "20")
+  //   .attr("color-interpolation-filters", "sRGB")
+  //   .attr("result", "blur");
+  // gooey.append("feColorMatrix")
+  //   //the class used later to transition the gooey effect
+  //   .attr("class", "blurValues")
+  //   .attr("in", "blur")
+  //   .attr("mode", "matrix")
+  //   .attr("values", "1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9")
+  //   .attr("result", "gooey");
 
-  //If you want the end shapes to be exactly the same size as without
-  //the filter add the feBlend below. However this will result in a
-  //less beautiful gooey effect
-  gooey.append("feBlend")
-    .attr("in", "SourceGraphic")
-    .attr("in2", "gooey");
+  // //If you want the end shapes to be exactly the same size as without
+  // //the filter add the feBlend below. However this will result in a
+  // //less beautiful gooey effect
+  // gooey.append("feBlend")
+  //   .attr("in", "SourceGraphic")
+  //   .attr("in2", "gooey");
 
-  //Instead of the feBlend, you can do feComposite. This will also
-  //place a sharp image on top. But it will result in smaller circles
+  // //Instead of the feBlend, you can do feComposite. This will also
+  // //place a sharp image on top. But it will result in smaller circles
   // gooey.append("feComposite") 
-  // feBlend
+  // // feBlend
   //     .attr("in","SourceGraphic")
   //     .attr("in2","gooey")
   //     .attr("operator","atop");
@@ -220,10 +231,10 @@ function initialize() {
 
   //Configure the Container and SVG
   container = svg.append('g');
-  container.append('g').attr('class', 'links');//.style("filter", "url(#gooeyCodeFilter)");;
-  container.append('g').attr('class', 'nodes');//.style("filter", "url(#gooeyCodeFilter)");
+  container.append('g').attr('class', 'links').style("filter", "url(#filter)");;
+  container.append('g').attr('class', 'nodes').style("filter", "url(#filter)");
 
-  simulation = d3.forceSimulation();
+  simulation = d3.forceSimulation(dataset.nodes);
   initSimulation();
 
   link = container.select('.links').selectAll('path');
@@ -243,21 +254,26 @@ function initSimulation() {
   simulation
     .force('link', d3.forceLink())
     .force('charge', d3.forceManyBody())
-    .force('collide', d3.forceCollide())
+    .force('collide', d3.forceCollide());
+
+  if(props.useGravity)
+  {
+    simulation
     .force('center', d3.forceCenter(width / 2, height / 2))
-    .force('forceX', d3.forceX().x(width / 2))
-    .force('forceY', d3.forceY().y(height / 2));
+    .force('forceX', d3.forceX().x(width / 2).strength(0.025))
+    .force('forceY', d3.forceY().y(height / 2).strength(0.025));
+  }
 
   simulation.force('link')
     .id((d) => d.id)
     .distance(function (d) {
-      return d.radius ? parseInt(d.radius) * 50 : 200
+      return parseInt(d.radius) ? parseInt(d.radius) * 50 : 200
     })
     .iterations(.1)
     .strength(.1);
 
-  simulation.force('collide').radius(function (d) { return d.radius ? parseInt(d.radius) : 2 }).strength(1);
-  simulation.force('charge').strength(-100);
+  // simulation.force('collide').radius(function (d) { return parseInt(d.radius) ? parseInt(d.radius) : 2 }).strength(1);
+  simulation.force('charge').strength(-200);
 }
 
 function loadLinks() {
@@ -274,12 +290,11 @@ function loadLinks() {
     .attr('id', (d, i) => parentId.value + 'textarc' + i)
     .attr("fill", "none")
     .attr("class", 'link')
-    .attr("stroke", "#aaa")
+    .attr("stroke", () => { return props.darkMode ? '#aaa' : "#777" })
     .attr("stroke-width", 3)
     .attr("marker-end", "url(#end)");
 
   link = linkEnter.merge(link);
-
 
   //Handle the linkTypes
   container.select('.links')
@@ -306,7 +321,7 @@ function loadLinks() {
     })
     .attr("fill", //make fill invisible if not selected
       function (d) {
-        return (d?.type?.en && (d.source.selected || d.target.selected))  ? "#77a" : "none";
+        return (d?.type?.en && (d.source.selected && d.target.selected)) ? (props.darkMode ? '#fff' : "#444") : "none"; //Make this an OR to show any selected relationships
       }
 
     )
@@ -345,7 +360,7 @@ function loadNodes() {
         nodes.append("circle")
           .attr("stroke", "#777")
           .attr("stroke-width", 3)
-          .attr("r", d => d.radius ? parseInt(d.radius) : 20)
+          .attr("r", d => parseInt(d.radius) ? parseInt(d.radius) : 20)
           .attr("fill", (d) => {
             if (!d.selected) return '#fff';
             if (d.selected && d.selectedIndex == 0) return '#ffc';
@@ -355,28 +370,34 @@ function loadNodes() {
 
         //Underlying text
         nodes.append("text")
-          .attr("x", d => parseInt(d.radius) + 2 ? d.radius + 8 : 24)
+          .attr("x", d => parseInt(d.radius) + 2 ? parseInt(d.radius) + 8 : 24)
           .attr("y", "0.31em")
           .text(d => d.name.en)
-          .attr("fill", "#fff")
-          .attr("stroke-width", 3)
-          .attr("stroke", "#fff")
+          .attr("fill", () => { return props.darkMode ? '#fff' : "#334" })
+          .attr("stroke-width", 5)
+          .attr("stroke", () => { return props.darkMode ? '#334' : "#fff" })
+          .attr("font-weight", "600")
         // .style("filter", "url(#glow)");
 
         //Overlapping tax
         nodes.append("text")
-          .attr("x", d => d.radius ? parseInt(d.radius) + 8 : 24)
+          .attr("x", d => parseInt(d.radius) ? parseInt(d.radius) + 8 : 24)
           .attr("y", "0.31em")
           .text(d => d.name.en)
-          .attr("fill", "#333")
+          .attr("fill", () => { return props.darkMode ? '#fff' : "#334" })
+          .attr("font-weight", "600")
+
           // .style("filter", "url(#glow)");
           ;
-          
+
         return nodes;
       },
     );
 
   emit('nodes', dataset.nodes)
+  // console.log(dataset.nodes)
+  if (props.glow) container.style("filter", "url(#glow)")
+
 }
 
 function drag(simulation) {
@@ -399,6 +420,7 @@ function drag(simulation) {
     // d.fx = null;
     // d.fy = null;
     // deselectNode(d)
+    console.log(d)
   }
 
   return d3.drag()
@@ -437,8 +459,8 @@ function addNode(node) {
   if (!node.description) node.descripion = { "en": "New Node Description", "fr": "Description du nouveau nœud" }
   if (!node.type) node.type = 'default';
   if (!node.radius) node.radius = 20;
-  if (!node.x) node.x = 0;
-  if (!node.y) node.y = 0;
+  if (!node.x) node.x = width/2;
+  if (!node.y) node.y = height/2;
   if (!node.vx) node.vx = 0;
   if (!node.vy) node.vy = 0;
   dataset.nodes.push(node);
@@ -446,34 +468,45 @@ function addNode(node) {
   loadLinks();
   loadNodes();
   restartSimulation();
+  emit('addNodes', node)
 }
 
 function deleteSelectedNode() {
 
+  var deletedNodes = []
   for (var a = dataset.links.length - 1; a >= 0; a--) {
     console.log(dataset.links[a].source.selected)
     if (dataset.links[a].source?.selected || dataset.links[a].target?.selected) dataset.links.splice(a, 1);
   }
 
   for (var a = dataset.nodes.length - 1; a >= 0; a--) {
-    if (dataset.nodes[a].selected) dataset.nodes.splice(a, 1);
+    if (dataset.nodes[a].selected) 
+    {
+      deletedNodes.push( dataset.nodes[a])
+      dataset.nodes.splice(a, 1);
+    }
   }
   selectedNodes.value.splice(0, selectedNodes.value.length)
 
   loadLinks();
   loadNodes();
   restartSimulation();
+  emit('deleteNodes',deletedNodes)
+
+
 }
 
 function updateNode(node) {
-
+  // console.log(node)
   loadNodes();
   restartSimulation();
+  emit('updateNodes', [node])
 }
 
 
 function addLink() {
   if (selectedNodes.value.length >= 2) {
+    var addedLinks = []
     for (var a = 1; a < selectedNodes.value.length; a++) {
       var link = {};
       link.id = uuidv4();
@@ -482,11 +515,13 @@ function addLink() {
       link.descripion = { "en": "New Link Description", "fr": "Description du nouveau lien" }
       link.source = selectedNodes.value[0];
       link.target = selectedNodes.value[a];
-      link.type = { "en": "Associate of", "fr": "Associé de"};
+      link.type = { "en": "Associate of", "fr": "Associé de" };
       dataset.links.push(link);
+      addedLinks.push(link)
     }
     loadLinks();
     restartSimulation();
+    emit('addLinks', addedLinks)
   }
 }
 
@@ -501,7 +536,19 @@ function selectNode(node) {
     loadLinks();
     loadNodes();
     restartSimulation();
+    emit('selectNodes', [node])
+    emit('selectedNodes', selectedNodes.value)
   }
+}
+
+function pinAll() {
+  dataset.nodes.forEach((node) => {
+    node.fixed = true;
+    node.fx = node.x;
+    node.fy = node.y;
+  })
+  loadNodes();
+  restartSimulation();
 }
 
 function toggleFixed() {
@@ -527,6 +574,7 @@ function toggleFixed() {
   restartSimulation();
 }
 
+
 function deselectNode(node) {
   currentNode.value = null;
   node.selected = false;
@@ -535,6 +583,8 @@ function deselectNode(node) {
   loadLinks();
   loadNodes();
   restartSimulation();
+  emit('deselectNodes', [node])
+  emit('selectedNodes', selectedNodes.value)
 }
 
 function drawCurve2(d) {
@@ -560,7 +610,7 @@ function drawCurve2(d) {
   var dqy = d.target.y - qy;
   var qr = Math.sqrt(dqx * dqx + dqy * dqy);
 
-  var offset = d.target.radius + 5;
+  var offset = parseInt(d.target.radius) + 5;
   var tx = d.target.x - dqx / qr * offset;
   var ty = d.target.y - dqy / qr * offset;
 
@@ -610,6 +660,23 @@ function downloadSvg(id) {
  
 <!-- Important to ensure your styles are scoped for your components to not interfere with global styling -->
 <style scoped>
+.inputField {
+  @apply bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500
+}
+
+.btn {
+  @apply font-bold py-2 px-4 rounded mr-1;
+}
+
+.btn-blue {
+  @apply bg-blue-500 text-white;
+}
+
+.btn-blue:hover {
+  @apply bg-blue-700;
+}
+
+
 .d3GraphCreatorSvgParent {
   height: 500px;
   min-height: 500px;
@@ -617,20 +684,7 @@ function downloadSvg(id) {
   border-width: 3px;
   border-color: grey;
   border-style: solid;
-}
-
-.d3GraphCreatorMenu {
-  height: 40px;
-}
-.d3GraphCreatorMenuIcon {
-  font-size: 1.5em;
-  padding: 5px;
-  height: 20px;
-  margin-top: auto;
-  margin-bottom: auto;
-}
-
-.d3GraphCreatorMenuIcon:hover {
-  opacity: 0.8;
+  margin-top: 10px;
+  padding-bottom: 0px;
 }
 </style> 

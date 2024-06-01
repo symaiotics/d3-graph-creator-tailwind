@@ -1,6 +1,6 @@
 {
-  "name": "@symaiotics/d3-graph-creator-gcweb",
-  "version": "0.0.12",
+  "name": "@symaiotics/d3-graph-creator-tailwind",
+  "version": "0.0.10",
   "files": [
     "dist"
   ],
@@ -16,23 +16,27 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "serve": "vite preview"
+    "serve": "vite preview",
+    "prepare": "npm run build"
   },
   "dependencies": {
-    "d3": "^7.3.0",
+    "d3": "^7.8.4",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^1.9.3",
-    "vite": "^2.6.4",
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.23",
     "sass": "^1.49.8",
+    "tailwindcss": "^3.3.1",
+    "vite": "^2.6.4",
     "vue": "^3.2.29"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/symaiotics/d3-graph-creator-gcweb.git"
+    "url": "https://github.com/symaiotics/d3-graph-creator-tailwind.git"
   },
-  "description": "A network graph builder using the powerful D3.js library, applying the GCWeb theme.",
+  "description": "A network graph builder using the powerful D3.js library, applying the Tailwind CSS theme.",
   "author": "Symaiotics Corporation",
   "license": "ISC",
   "publishConfig": {
