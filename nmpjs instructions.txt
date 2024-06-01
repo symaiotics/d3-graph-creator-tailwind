@@ -1,0 +1,17 @@
+Build Command
+Run the build command:
+
+npm run build
+This will create the bundled file in the dist directory.
+
+3. Publish to npm
+a. Login to npm
+If you’re not already logged in, log in to npm:
+
+npm login
+You’ll need to provide your npm username, password, and email.
+
+b. Publish the Package
+Publish your package to npm:
+
+npm publish --access public
