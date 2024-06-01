@@ -79,6 +79,7 @@ const props = defineProps({
   title: { type: String, default: "D3 Graph Creator" },
   description: { type: String, default: "An interactive graph interface." },
 
+  height: { type: Number, default: 500 },
   glow: { type: Boolean, default: false },
   darkMode: { type: Boolean, default: false },
   showControls: { type: Boolean, default: true },
@@ -132,8 +133,7 @@ function initialize() {
   var parentDiv = document.getElementById(parentId.value);
   width = parentDiv.clientWidth;
   if (!width) width = 500;
-  height = parentDiv.clientHeight;
-  if (!height) height = 500;
+  height = props.height;
   svg = d3.select(parentDiv).append("svg");
   svg.attr("width", width)
     .attr("height", height)
@@ -678,8 +678,6 @@ function downloadSvg(id) {
 
 
 .d3GraphCreatorSvgParent {
-  height: 500px;
-  min-height: 500px;
   border-radius: 5px;
   border-width: 3px;
   border-color: grey;

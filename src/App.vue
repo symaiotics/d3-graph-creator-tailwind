@@ -5,5 +5,5 @@ import ComponentTemplate from '@/components/ComponentTemplate.vue';
 </script>
 
 <template>
-  <ComponentTemplate />
+  <ComponentTemplate :height="700" :darkMode = "true" :glow = "true" :showTable = "false"/>
 </template>
